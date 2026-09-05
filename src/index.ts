@@ -37,9 +37,10 @@ async function main() {
     process.env.TELEMETRY === 'true' ||
     process.env.TELEMETRY === '1';
 
-  const port = parseInt(process.env.PORT || '6379', 10);
-  const host = process.env.HOST || '127.0.0.1';
-  const telemetryPort = parseInt(process.env.TELEMETRY_PORT || '3000', 10);
+  // Cloud hosts (e.g. Render) expose process.env.PORT for the HTTP service
+  const telemetryPort = parseInt(process.env.TELEMETRY_PORT || (process.env.PORT && isTelemetry ? process.env.PORT : '3000'), 10);
+  const port = parseInt(process.env.REDIS_PORT || (process.env.PORT && !isTelemetry ? process.env.PORT : '6379'), 10);
+  const host = process.env.HOST || '0.0.0.0';
 
   let workers = os.cpus().length;
   const workersArgIdx = args.indexOf('--workers');
