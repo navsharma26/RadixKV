@@ -6,6 +6,7 @@ import express from 'express';
 import { WebSocketServer, WebSocket } from 'ws';
 import type { ClusterCoordinator } from '../cluster/cluster-coordinator.ts';
 import { TelemetryCollector } from './telemetry-collector.ts';
+import { GeminiService } from './gemini-service.ts';
 
 export interface TelemetryServerOptions {
   port?: number;
@@ -21,6 +22,7 @@ export class TelemetryServer {
   public readonly wss: WebSocketServer;
   public readonly collector: TelemetryCollector;
   public readonly coordinator: ClusterCoordinator;
+  public readonly gemini: GeminiService;
 
   private readonly port: number;
   private readonly host: string;
@@ -42,6 +44,8 @@ export class TelemetryServer {
       tickIntervalMs: 1000,
       historyLength: 60,
     });
+
+    this.gemini = new GeminiService();
 
     this.app = express();
     this.app.use(express.json());
@@ -132,7 +136,45 @@ export class TelemetryServer {
       res.json({ syntheticTraffic: this.isSyntheticTrafficRunning });
     });
 
-    // 5. Static file hosting for compiled React frontend
+    // 5. AI Redis Copilot Endpoint
+    this.app.post('/api/ai/copilot', async (req, res) => {
+      const { prompt } = req.body;
+      if (!prompt || typeof prompt !== 'string') {
+        res.status(400).json({ error: 'Prompt string is required' });
+        return;
+      }
+
+      try {
+        const result = await this.gemini.translateToRedisCommands(prompt);
+        res.json({ success: true, ...result });
+      } catch (err: any) {
+        res.status(500).json({ success: false, error: err.message });
+      }
+    });
+
+    // 6. AI Cluster Diagnostics Endpoint
+    this.app.post('/api/ai/diagnostics', async (_req, res) => {
+      try {
+        const snapshot = this.collector.getLatestSnapshot();
+        if (!snapshot) {
+          res.status(503).json({ success: false, error: 'Telemetry snapshot is initializing. Please retry in 1 second.' });
+          return;
+        }
+
+        const report = await this.gemini.generateClusterDiagnostics(snapshot, {
+          shardCount: this.coordinator.shardCount,
+          tcpPort: this.tcpPort,
+          telemetryPort: this.port,
+          syntheticTraffic: this.isSyntheticTrafficRunning,
+        });
+
+        res.json({ success: true, report });
+      } catch (err: any) {
+        res.status(500).json({ success: false, error: err.message });
+      }
+    });
+
+    // 7. Static file hosting for compiled React frontend
     const currentDir = path.dirname(fileURLToPath(import.meta.url));
     const distPath = path.resolve(currentDir, '../../web/dist');
 

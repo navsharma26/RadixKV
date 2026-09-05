@@ -1,5 +1,5 @@
 import React from 'react';
-import { Cpu, Database, Flame, Server, Wifi, WifiOff } from 'lucide-react';
+import { Cpu, Database, Flame, Server, Wifi, WifiOff, Sparkles } from 'lucide-react';
 import type { ClusterInfo } from '../types';
 
 interface HeaderProps {
@@ -8,6 +8,7 @@ interface HeaderProps {
   syntheticTraffic: boolean;
   onToggleSyntheticTraffic: (enabled: boolean) => void;
   latencyMs: number;
+  onOpenAiAdvisor?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -16,6 +17,7 @@ export const Header: React.FC<HeaderProps> = ({
   syntheticTraffic,
   onToggleSyntheticTraffic,
   latencyMs,
+  onOpenAiAdvisor,
 }) => {
   return (
     <header className="glass-panel sticky top-0 z-30 px-6 py-4 border-b border-slate-800/80 mb-6">
@@ -68,6 +70,18 @@ export const Header: React.FC<HeaderProps> = ({
             <Cpu className="w-3.5 h-3.5 text-violet-400" />
             <span>{clusterInfo?.shardCount ?? 4} SHARDS</span>
           </div>
+
+          {/* AI Advisor Modal Trigger */}
+          {onOpenAiAdvisor && (
+            <button
+              onClick={onOpenAiAdvisor}
+              className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 bg-gradient-to-r from-violet-950/60 via-fuchsia-950/40 to-purple-950/60 text-violet-200 border border-violet-500/60 hover:border-violet-400 hover:shadow-[0_0_15px_rgba(168,85,247,0.35)]"
+              title="Open Gemini AI Cluster Diagnostics & Tuning Advisor"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-violet-400 animate-pulse" />
+              <span>AI ADVISOR</span>
+            </button>
+          )}
 
           {/* Synthetic Workload Generator Toggle */}
           <button

@@ -4,6 +4,7 @@ import { MetricCards } from './components/MetricCards';
 import { TelemetryCharts } from './components/TelemetryCharts';
 import { MemoryHeatMap } from './components/MemoryHeatMap';
 import { TerminalEmulator } from './components/TerminalEmulator';
+import { AiAdvisorModal } from './components/AiAdvisorModal';
 import type { TelemetrySnapshot, ClusterInfo } from './types';
 
 export const App: React.FC = () => {
@@ -13,6 +14,7 @@ export const App: React.FC = () => {
   const [clusterInfo, setClusterInfo] = useState<ClusterInfo | null>(null);
   const [syntheticTraffic, setSyntheticTraffic] = useState(false);
   const [wsLatencyMs, setWsLatencyMs] = useState(0);
+  const [isAiAdvisorOpen, setIsAiAdvisorOpen] = useState(false);
 
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -144,6 +146,7 @@ export const App: React.FC = () => {
         syntheticTraffic={syntheticTraffic}
         onToggleSyntheticTraffic={handleToggleSyntheticTraffic}
         latencyMs={wsLatencyMs}
+        onOpenAiAdvisor={() => setIsAiAdvisorOpen(true)}
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-6">
@@ -166,6 +169,11 @@ export const App: React.FC = () => {
       <footer className="border-t border-slate-800/80 py-4 px-6 text-center text-xs text-slate-500 font-mono">
         RadixKV Observability Platform • Node.js Native • Multi-Core Consistent Hash Cluster • Zero External Caching Dependencies
       </footer>
+
+      <AiAdvisorModal
+        isOpen={isAiAdvisorOpen}
+        onClose={() => setIsAiAdvisorOpen(false)}
+      />
     </div>
   );
 };

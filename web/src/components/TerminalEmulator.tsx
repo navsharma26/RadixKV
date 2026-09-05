@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Terminal as TerminalIcon, Send, Trash2 } from 'lucide-react';
+import { Terminal as TerminalIcon, Send, Trash2, Sparkles } from 'lucide-react';
 import type { TerminalEntry } from '../types';
 
 interface TerminalEmulatorProps {
@@ -27,6 +27,9 @@ export const TerminalEmulator: React.FC<TerminalEmulatorProps> = ({ onSendComman
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
   const [commandHistory, setCommandHistory] = useState<string[]>(['INFO', 'PING']);
   const [isExecuting, setIsExecuting] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [isGeneratingAi, setIsGeneratingAi] = useState(false);
+  const [showAiBar, setShowAiBar] = useState(true);
 
   const terminalEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -35,6 +38,44 @@ export const TerminalEmulator: React.FC<TerminalEmulatorProps> = ({ onSendComman
   useEffect(() => {
     terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [history]);
+
+  const handleAiGenerate = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const trimmed = aiPrompt.trim();
+    if (!trimmed || isGeneratingAi) return;
+
+    setIsGeneratingAi(true);
+    try {
+      const res = await fetch('/api/ai/copilot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: trimmed }),
+      });
+      const data = await res.json();
+      if (data.success && data.commands && data.commands.length > 0) {
+        const generatedCmd = data.commands[0];
+        setInputCommand(generatedCmd);
+        setHistory((prev) => [
+          ...prev,
+          {
+            id: `ai-${Date.now()}`,
+            command: `✨ AI Copilot: "${trimmed}"`,
+            output: `Generated: ${data.commands.join(' ; ')}\nExplanation: ${data.explanation}`,
+            latencyUs: 0,
+            timestamp: new Date().toLocaleTimeString(),
+          },
+        ]);
+        setAiPrompt('');
+        inputRef.current?.focus();
+      } else {
+        alert(data.error || 'Failed to generate command with AI');
+      }
+    } catch (err: any) {
+      alert(err.message || 'AI request failed');
+    } finally {
+      setIsGeneratingAi(false);
+    }
+  };
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -172,6 +213,18 @@ export const TerminalEmulator: React.FC<TerminalEmulatorProps> = ({ onSendComman
             TTL
           </button>
           <button
+            onClick={() => setShowAiBar(!showAiBar)}
+            className={`flex items-center gap-1 px-2.5 py-0.5 rounded text-[11px] font-medium transition border ${
+              showAiBar
+                ? 'bg-violet-950/80 text-violet-300 border-violet-600 shadow-[0_0_10px_rgba(168,85,247,0.3)]'
+                : 'bg-slate-800/80 hover:bg-slate-700 text-violet-300 border-violet-900/50'
+            }`}
+            title="Toggle Gemini AI Copilot prompt bar"
+          >
+            <Sparkles className="w-3 h-3 text-violet-400" />
+            <span>AI Copilot</span>
+          </button>
+          <button
             onClick={() => setHistory([])}
             className="p-1 rounded bg-slate-800 hover:bg-rose-950/40 text-slate-400 hover:text-rose-400 transition"
             title="Clear terminal window"
@@ -205,8 +258,33 @@ export const TerminalEmulator: React.FC<TerminalEmulatorProps> = ({ onSendComman
         <div ref={terminalEndRef} />
       </div>
 
+      {/* AI Copilot Prompt Bar */}
+      {showAiBar && (
+        <form onSubmit={handleAiGenerate} className="mt-2.5 flex items-center gap-2 p-1.5 rounded-xl bg-violet-950/20 border border-violet-900/40">
+          <div className="relative flex-1 flex items-center">
+            <Sparkles className="absolute left-3 w-3.5 h-3.5 text-violet-400 pointer-events-none animate-pulse" />
+            <input
+              type="text"
+              value={aiPrompt}
+              onChange={(e) => setAiPrompt(e.target.value)}
+              disabled={isGeneratingAi}
+              placeholder="Ask Gemini AI (e.g. 'Store session for user 42 with 5 min TTL', 'increment homepage view count')..."
+              className="w-full pl-9 pr-3 py-1.5 bg-slate-950/90 border border-violet-900/50 rounded-lg text-xs font-sans text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 transition-all"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={isGeneratingAi || !aiPrompt.trim()}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white font-medium text-xs transition-all shadow-[0_0_12px_rgba(139,92,246,0.3)] shrink-0"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>{isGeneratingAi ? 'Translating...' : 'Generate Redis'}</span>
+          </button>
+        </form>
+      )}
+
       {/* Command Input Prompt */}
-      <form onSubmit={handleSubmit} className="mt-3 flex items-center gap-2">
+      <form onSubmit={handleSubmit} className="mt-2 flex items-center gap-2">
         <div className="relative flex-1 flex items-center">
           <span className="absolute left-3 text-cyan-400 font-mono text-xs font-bold pointer-events-none">
             radix-kv:6379&gt;

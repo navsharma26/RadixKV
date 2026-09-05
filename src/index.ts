@@ -21,6 +21,16 @@ export * from './cluster/cluster-coordinator.ts';
 export * from './cluster/cluster-server.ts';
 export * from './telemetry/telemetry-collector.ts';
 export * from './telemetry/telemetry-server.ts';
+export * from './telemetry/gemini-service.ts';
+
+// Automatically load local .env if available
+try {
+  if (typeof (process as any).loadEnvFile === 'function') {
+    (process as any).loadEnvFile();
+  }
+} catch {
+  // Ignore if .env is missing or in cloud container
+}
 
 /**
  * CLI execution entrypoint when run directly
