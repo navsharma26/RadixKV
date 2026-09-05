@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, X, RefreshCw, CheckCircle2, AlertTriangle, AlertOctagon, Cpu, Zap, ShieldCheck } from 'lucide-react';
+import { getApiBaseUrl } from '../config';
 
 export interface DiagnosticFinding {
   metric: string;
@@ -35,7 +36,7 @@ export const AiAdvisorModal: React.FC<AiAdvisorModalProps> = ({
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/ai/diagnostics', {
+      const res = await fetch(`${getApiBaseUrl()}/api/ai/diagnostics`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });

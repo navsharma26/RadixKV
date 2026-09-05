@@ -50,11 +50,15 @@ export class TelemetryServer {
     this.app = express();
     this.app.use(express.json());
 
-    // CORS headers for development
-    this.app.use((_req, res, next) => {
+    // CORS headers for cross-origin dashboard communication (e.g. Vercel -> Render)
+    this.app.use((req, res, next) => {
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+      if (req.method === 'OPTIONS') {
+        res.sendStatus(204);
+        return;
+      }
       next();
     });
 

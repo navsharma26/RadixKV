@@ -6,6 +6,7 @@ import { MemoryHeatMap } from './components/MemoryHeatMap';
 import { TerminalEmulator } from './components/TerminalEmulator';
 import { AiAdvisorModal } from './components/AiAdvisorModal';
 import type { TelemetrySnapshot, ClusterInfo } from './types';
+import { getApiBaseUrl, getWebSocketUrl } from './config';
 
 export const App: React.FC = () => {
   const [isConnected, setIsConnected] = useState(false);
@@ -23,11 +24,7 @@ export const App: React.FC = () => {
   const connectWebSocket = () => {
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
 
-    // Connect to same host or default to 3000 if in dev mode
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.port === '5173' ? 'localhost:3000' : window.location.host;
-    const wsUrl = `${protocol}//${host}/ws`;
-
+    const wsUrl = getWebSocketUrl();
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
@@ -89,7 +86,7 @@ export const App: React.FC = () => {
     const pingInterval = setInterval(async () => {
       const t0 = performance.now();
       try {
-        const res = await fetch('/api/metrics');
+        const res = await fetch(`${getApiBaseUrl()}/api/metrics`);
         if (res.ok) {
           const t1 = performance.now();
           setWsLatencyMs(Math.round(t1 - t0));
@@ -108,7 +105,7 @@ export const App: React.FC = () => {
 
   const handleToggleSyntheticTraffic = async (enabled: boolean) => {
     try {
-      const res = await fetch('/api/synthetic-traffic', {
+      const res = await fetch(`${getApiBaseUrl()}/api/synthetic-traffic`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ enabled }),
@@ -123,7 +120,7 @@ export const App: React.FC = () => {
   };
 
   const handleSendCommand = async (command: string) => {
-    const res = await fetch('/api/command', {
+    const res = await fetch(`${getApiBaseUrl()}/api/command`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ command }),

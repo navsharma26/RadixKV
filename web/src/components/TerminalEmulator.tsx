@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Terminal as TerminalIcon, Send, Trash2, Sparkles } from 'lucide-react';
 import type { TerminalEntry } from '../types';
+import { getApiBaseUrl } from '../config';
 
 interface TerminalEmulatorProps {
   onSendCommand: (command: string) => Promise<{ output: string; latencyUs: number; error?: string }>;
@@ -31,12 +32,14 @@ export const TerminalEmulator: React.FC<TerminalEmulatorProps> = ({ onSendComman
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
   const [showAiBar, setShowAiBar] = useState(true);
 
-  const terminalEndRef = useRef<HTMLDivElement>(null);
+  const terminalContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-scroll terminal to bottom
+  // Auto-scroll terminal container ONLY (never the whole window)
   useEffect(() => {
-    terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (terminalContainerRef.current) {
+      terminalContainerRef.current.scrollTop = terminalContainerRef.current.scrollHeight;
+    }
   }, [history]);
 
   const handleAiGenerate = async (e?: React.FormEvent) => {
@@ -46,7 +49,7 @@ export const TerminalEmulator: React.FC<TerminalEmulatorProps> = ({ onSendComman
 
     setIsGeneratingAi(true);
     try {
-      const res = await fetch('/api/ai/copilot', {
+      const res = await fetch(`${getApiBaseUrl()}/api/ai/copilot`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: trimmed }),
@@ -235,7 +238,10 @@ export const TerminalEmulator: React.FC<TerminalEmulatorProps> = ({ onSendComman
       </div>
 
       {/* Terminal Screen */}
-      <div className="bg-[#05080f] rounded-xl p-4 font-mono text-xs border border-slate-900 shadow-inner h-80 overflow-y-auto flex flex-col gap-2">
+      <div
+        ref={terminalContainerRef}
+        className="bg-[#05080f] rounded-xl p-4 font-mono text-xs border border-slate-900 shadow-inner h-80 overflow-y-auto flex flex-col gap-2"
+      >
         {history.map((entry) => (
           <div key={entry.id} className="flex flex-col gap-0.5">
             <div className="flex items-center justify-between text-slate-400">
@@ -255,7 +261,6 @@ export const TerminalEmulator: React.FC<TerminalEmulatorProps> = ({ onSendComman
             </div>
           </div>
         ))}
-        <div ref={terminalEndRef} />
       </div>
 
       {/* AI Copilot Prompt Bar */}
