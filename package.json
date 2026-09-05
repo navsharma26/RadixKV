@@ -1,0 +1,32 @@
+{
+  "name": "radix-kv-resp-server",
+  "version": "1.0.0",
+  "description": "Production-grade standalone TCP server in Node.js using TypeScript with streaming RESP parser",
+  "main": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "start": "node --experimental-strip-types src/index.ts",
+    "telemetry": "node --experimental-strip-types src/index.ts --cluster --telemetry",
+    "test": "node --experimental-strip-types tests/resp-parser.test.ts && node --experimental-strip-types tests/storage-engine.test.ts && node --experimental-strip-types tests/aof-durability.test.ts && node --experimental-strip-types tests/cold-storage.test.ts && node --experimental-strip-types tests/consistent-hash.test.ts && node --experimental-strip-types tests/atomic-lock.test.ts && node --experimental-strip-types tests/cluster-server.test.ts && node --experimental-strip-types tests/telemetry-collector.test.ts && node --experimental-strip-types tests/telemetry-server.test.ts && node --experimental-strip-types tests/server.test.ts",
+    "bench": "node --experimental-strip-types tests/benchmark.ts",
+    "build:web": "npm run build --prefix web",
+    "dev:web": "npm run dev --prefix web"
+  },
+  "keywords": [
+    "resp",
+    "redis",
+    "tcp",
+    "streaming",
+    "parser"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^5.2.1",
+    "ws": "^8.21.3"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/ws": "^8.18.1"
+  }
+}
