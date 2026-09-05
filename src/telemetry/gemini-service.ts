@@ -26,7 +26,7 @@ export interface DiagnosticReport {
 export class GeminiService {
   private readonly apiKey: string | null;
   private readonly modelName: string = 'gemini-3.5-flash-lite';
-  private readonly fallbackModel: string = 'gemini-1.5-flash';
+  private readonly fallbackModel: string = 'gemini-2.5-flash-lite';
 
   constructor(apiKey?: string) {
     if (apiKey !== undefined) {
@@ -199,7 +199,7 @@ Do not include any prose outside the JSON.`;
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
-          signal: AbortSignal.timeout(10_000),
+          signal: AbortSignal.timeout(25_000),
         });
 
         if (res.ok) {
