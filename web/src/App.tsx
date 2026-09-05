@@ -15,7 +15,7 @@ export const App: React.FC = () => {
   const [wsLatencyMs, setWsLatencyMs] = useState(0);
 
   const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Connect to WebSocket telemetry stream
   const connectWebSocket = () => {
